@@ -11,6 +11,15 @@ Most "remote mouse" apps require an account, phone home to a cloud server, or co
 
 This project is free and ad-free, and it will stay that way. No monetization, no telemetry, no catch.
 
+## Download
+
+Prebuilt binaries are attached to each [GitHub Release](https://github.com/ms802x/remote-touchpad/releases):
+
+- **Android**: download the `.apk`, open it on your phone, and install (you may need to allow "install from unknown sources" once, since this isn't on the Play Store).
+- **Windows**: download the `.exe` and run it directly. No installer, no admin rights needed.
+
+Or build either one from source yourself, see [Getting started](#getting-started) below.
+
 ## Features
 
 - **Full-screen trackpad**: drag to move the cursor, tap to left-click, hold to right-click
