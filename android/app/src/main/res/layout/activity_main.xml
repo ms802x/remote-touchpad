@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+        <View
+            android:id="@+id/statusDot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/dot_status"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Not connected"
+            android:textColor="@color/textPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/deviceButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Find laptop"
+            android:textAllCaps="false"
+            android:textSize="13sp"
+            android:background="@drawable/bg_button"
+            android:textColor="@color/textPrimary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+    </LinearLayout>
+
+    <!-- Trackpad: fills almost the whole screen -->
+    <com.remotetouchpad.app.TrackpadView
+        android:id="@+id/trackpad"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_trackpad" />
+
+    <!-- Media row: volume / playback controls, toggled by mediaToggle -->
+    <LinearLayout
+        android:id="@+id/mediaBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_card"
+        android:padding="10dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="10dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/prevButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_skip_previous"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Previous track" />
+
+        <ImageButton
+            android:id="@+id/volumeDownButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_volume_down"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Volume down" />
+
+        <ImageButton
+            android:id="@+id/playPauseButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_play_pause"
+            app:tint="@color/accent"
+            android:contentDescription="Play or pause" />
+
+        <ImageButton
+            android:id="@+id/volumeUpButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_volume_up"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Volume up" />
+
+        <ImageButton
+            android:id="@+id/nextButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_skip_next"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Next track" />
+    </LinearLayout>
+
+    <!-- Bottom bar: keyboard/media toggles + inline keyboard input -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_card"
+        android:padding="10dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/keyboardToggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_keyboard"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Toggle keyboard" />
+
+        <ImageButton
+            android:id="@+id/mediaToggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_media"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Toggle media controls" />
+
+        <ImageButton
+            android:id="@+id/zoomOutButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_zoom_out"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Zoom out" />
+
+        <ImageButton
+            android:id="@+id/zoomInButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_zoom_in"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Zoom in" />
+
+        <ImageButton
+            android:id="@+id/reverseScrollToggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_reverse_scroll"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Toggle reverse scroll" />
+
+        <com.remotetouchpad.app.RemoteKeyboardEditText
+            android:id="@+id/keyboardInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:visibility="gone"
+            android:hint="Type to send…"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:background="@null"
+            android:maxLines="1"
+            android:imeOptions="actionDone" />
+
+        <ImageButton
+            android:id="@+id/backspaceButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_backspace"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Backspace" />
+
+        <ImageButton
+            android:id="@+id/enterButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_enter"
+            app:tint="@color/accent"
+            android:contentDescription="Enter" />
+    </LinearLayout>
+
+</LinearLayout>

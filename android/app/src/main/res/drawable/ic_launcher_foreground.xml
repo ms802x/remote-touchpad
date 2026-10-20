@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Rounded phone outline -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F2F3F7"
+        android:strokeWidth="4"
+        android:pathData="M39,24h30a8,8 0,0 1,8 8v44a8,8 0,0 1,-8 8H39a8,8 0,0 1,-8 -8V32a8,8 0,0 1,8 -8z" />
+    <!-- Cursor arrow -->
+    <path
+        android:fillColor="#6C8CFF"
+        android:pathData="M48,44l22,19l-9,1.5l5,9.5l-5,2.5l-5,-9.5l-8,6z" />
+</vector>

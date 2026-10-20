@@ -1,0 +1,26 @@
+# Android
+android/.gradle/
+android/.idea/
+android/.kotlin/
+android/local.properties
+android/app/build/
+android/app/release/
+android/build/
+android/*.iml
+android/app/*.iml
+android/captures/
+*.jks
+*.keystore
+keystore.properties
+
+# Windows server (Python)
+windows-server/__pycache__/
+windows-server/build/
+windows-server/dist/
+windows-server/*.spec
+windows-server/venv/
+*.pyc
+
+# OS cruft
+.DS_Store
+Thumbs.db
