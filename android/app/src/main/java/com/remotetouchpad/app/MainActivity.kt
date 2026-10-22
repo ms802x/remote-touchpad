@@ -129,9 +129,7 @@ class MainActivity : AppCompatActivity() {
                 if (newText.length > lastKeyboardText.length && newText.startsWith(lastKeyboardText)) {
                     connection.sendText(newText.substring(lastKeyboardText.length))
                 } else if (newText.length < lastKeyboardText.length) {
-                    repeat(lastKeyboardText.length - newText.length) {
-                        connection.sendKeyCode("BACKSPACE")
-                    }
+                    connection.sendKeyCode("BACKSPACE", repeat = lastKeyboardText.length - newText.length)
                 } else if (newText != lastKeyboardText) {
                     connection.sendText(newText)
                 }

@@ -8,13 +8,35 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
+import java.net.InetAddress
+import java.net.Socket
 import java.util.concurrent.TimeUnit
+import javax.net.SocketFactory
+
+/**
+ * Disables Nagle's algorithm on every socket OkHttp opens for this client.
+ * Nagle batches/delays small TCP writes, which is exactly our traffic
+ * pattern (a stream of tiny move/key JSON messages) - without this, input
+ * can lag by tens of milliseconds per burst.
+ */
+private class NoDelaySocketFactory : SocketFactory() {
+    override fun createSocket(): Socket = Socket().apply { tcpNoDelay = true }
+    override fun createSocket(host: String?, port: Int): Socket =
+        Socket(host, port).apply { tcpNoDelay = true }
+    override fun createSocket(host: String?, port: Int, localHost: InetAddress?, localPort: Int): Socket =
+        Socket(host, port, localHost, localPort).apply { tcpNoDelay = true }
+    override fun createSocket(host: InetAddress?, port: Int): Socket =
+        Socket(host, port).apply { tcpNoDelay = true }
+    override fun createSocket(address: InetAddress?, port: Int, localAddress: InetAddress?, localPort: Int): Socket =
+        Socket(address, port, localAddress, localPort).apply { tcpNoDelay = true }
+}
 
 class RemoteConnection(
     private val onStateChanged: (connected: Boolean) -> Unit
 ) {
     private val client = OkHttpClient.Builder()
         .connectTimeout(5, TimeUnit.SECONDS)
+        .socketFactory(NoDelaySocketFactory())
         .build()
 
     private var socket: WebSocket? = null
@@ -103,8 +125,8 @@ class RemoteConnection(
         send(JSONObject().put("type", "key").put("text", text))
     }
 
-    fun sendKeyCode(code: String) {
-        send(JSONObject().put("type", "key").put("code", code))
+    fun sendKeyCode(code: String, repeat: Int = 1) {
+        send(JSONObject().put("type", "key").put("code", code).put("repeat", repeat))
     }
 
     private fun send(json: JSONObject) {

@@ -9,6 +9,7 @@ or you can connect manually to ws://<this-machine's-LAN-IP>:8765
 """
 import asyncio
 import ctypes
+from ctypes import wintypes
 import json
 import socket
 
@@ -25,12 +26,56 @@ mouse = MouseController()
 keyboard = KeyboardController()
 
 # A single native relative-move call (vs. pynput's read-position-then-set-
-# position, which is two round trips) — noticeably smoother/lower latency.
+# position, which is two round trips) - noticeably smoother/lower latency.
 _MOUSEEVENTF_MOVE = 0x0001
 
 
 def move_mouse_relative(dx: int, dy: int) -> None:
     ctypes.windll.user32.mouse_event(_MOUSEEVENTF_MOVE, dx, dy, 0, 0)
+
+
+# --- Unicode text injection -------------------------------------------------
+# pynput's keyboard.type() maps characters to virtual-key codes through the
+# ACTIVE WINDOWS KEYBOARD LAYOUT (VkKeyScan). If the system's active input
+# language isn't English (e.g. Arabic), plain ASCII letters get reinterpreted
+# through that layout and come out as the wrong characters. Sending raw
+# Unicode code points via SendInput's KEYEVENTF_UNICODE flag bypasses the
+# active layout entirely, so typed text is always correct regardless of
+# whatever language the system is currently set to.
+
+INPUT_KEYBOARD = 1
+KEYEVENTF_UNICODE = 0x0004
+KEYEVENTF_KEYUP = 0x0002
+
+
+class _KEYBDINPUT(ctypes.Structure):
+    _fields_ = [
+        ("wVk", wintypes.WORD),
+        ("wScan", wintypes.WORD),
+        ("dwFlags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.POINTER(wintypes.ULONG)),
+    ]
+
+
+class _INPUT(ctypes.Structure):
+    class _Inner(ctypes.Union):
+        _fields_ = [("ki", _KEYBDINPUT)]
+
+    _anonymous_ = ("_inner",)
+    _fields_ = [("type", wintypes.DWORD), ("_inner", _Inner)]
+
+
+def type_text_unicode(text: str) -> None:
+    events = []
+    for ch in text:
+        code = ord(ch)
+        events.append(_INPUT(type=INPUT_KEYBOARD, ki=_KEYBDINPUT(0, code, KEYEVENTF_UNICODE, 0, None)))
+        events.append(_INPUT(type=INPUT_KEYBOARD, ki=_KEYBDINPUT(0, code, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, 0, None)))
+    if not events:
+        return
+    array = (_INPUT * len(events))(*events)
+    ctypes.windll.user32.SendInput(len(events), array, ctypes.sizeof(_INPUT))
 
 
 # Phone sends fractional pixel deltas (sensitivity multiplier isn't a whole
@@ -89,12 +134,13 @@ def handle_message(data: dict) -> None:
 
     elif msg_type == "key":
         if "text" in data:
-            keyboard.type(data["text"])
+            type_text_unicode(data["text"])
         elif "code" in data:
             key = SPECIAL_KEYS.get(data["code"])
             if key is not None:
-                keyboard.press(key)
-                keyboard.release(key)
+                for _ in range(max(1, data.get("repeat", 1))):
+                    keyboard.press(key)
+                    keyboard.release(key)
 
     elif msg_type == "scroll":
         clicks = data.get("clicks", 0)
@@ -108,8 +154,21 @@ def handle_message(data: dict) -> None:
                 mouse.scroll(0, clicks)
 
 
+def _disable_nagle(websocket) -> None:
+    # Nagle's algorithm batches/delays small TCP packets, which is exactly
+    # the traffic pattern here (a stream of tiny move/key messages). Without
+    # disabling it, bursts of input can lag by tens of milliseconds each.
+    try:
+        sock = websocket.transport.get_extra_info("socket")
+        if sock is not None:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    except Exception:
+        pass
+
+
 async def handler(websocket):
     print("Phone connected.")
+    _disable_nagle(websocket)
     try:
         async for message in websocket:
             try:
