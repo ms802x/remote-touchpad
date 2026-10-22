@@ -3,16 +3,24 @@ package com.remotetouchpad.app
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.remotetouchpad.app.databinding.ActivityMainBinding
 import kotlin.concurrent.thread
 
@@ -28,8 +36,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Modern Android (edge-to-edge by default) draws behind the system
+        // navigation bar, so the bottom controls need explicit padding or
+        // they end up flush against (or under) the phone's virtual nav bar.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         connection = RemoteConnection { connected -> runOnUiThread { updateStatus(connected) } }
 
+        setupInsetPadding()
         setupTrackpad()
         setupKeyboardToggle()
         setupKeyboardInput()
@@ -39,6 +54,32 @@ class MainActivity : AppCompatActivity() {
         binding.deviceButton.setOnClickListener { startScan() }
 
         tryAutoReconnect()
+    }
+
+    private fun setupInsetPadding() {
+        // Capture the base values from XML once; the insets listener can
+        // fire more than once (rotation, re-layout), and reading back the
+        // view's own current padding as the "base" each time would keep
+        // stacking the inset on top of itself.
+        val baseTopPadding = binding.topBar.paddingTop
+        val baseTopPaddingH = binding.topBar.paddingLeft
+        val baseBottomMargin = (binding.bottomBar.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.topBar.setPadding(
+                baseTopPaddingH + bars.left,
+                baseTopPadding + bars.top,
+                baseTopPaddingH + bars.right,
+                binding.topBar.paddingBottom
+            )
+            val params = binding.bottomBar.layoutParams as ViewGroup.MarginLayoutParams
+            params.bottomMargin = baseBottomMargin + bars.bottom
+            params.leftMargin = bars.left
+            params.rightMargin = bars.right
+            binding.bottomBar.layoutParams = params
+            insets
+        }
     }
 
     private fun prefs() = getSharedPreferences("remote_control", Context.MODE_PRIVATE)
@@ -95,8 +136,36 @@ class MainActivity : AppCompatActivity() {
         binding.prevButton.setOnClickListener { connection.sendKeyCode("PREV_TRACK") }
         binding.nextButton.setOnClickListener { connection.sendKeyCode("NEXT_TRACK") }
         binding.playPauseButton.setOnClickListener { connection.sendKeyCode("PLAY_PAUSE") }
-        binding.volumeUpButton.setOnClickListener { connection.sendKeyCode("VOLUME_UP") }
-        binding.volumeDownButton.setOnClickListener { connection.sendKeyCode("VOLUME_DOWN") }
+        setRepeatableAction(binding.volumeUpButton) { connection.sendKeyCode("VOLUME_UP") }
+        setRepeatableAction(binding.volumeDownButton) { connection.sendKeyCode("VOLUME_DOWN") }
+    }
+
+    /** Fires once on tap, then keeps firing while held down (like a real volume key). */
+    private fun setRepeatableAction(button: ImageButton, action: () -> Unit) {
+        val repeatHandler = Handler(Looper.getMainLooper())
+        var repeating = false
+        lateinit var repeatRunnable: Runnable
+        repeatRunnable = Runnable {
+            action()
+            repeatHandler.postDelayed(repeatRunnable, 120L)
+        }
+
+        button.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    repeating = true
+                    action()
+                    repeatHandler.postDelayed(repeatRunnable, 400L) // initial delay before repeat kicks in
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (repeating) {
+                        repeating = false
+                        repeatHandler.removeCallbacks(repeatRunnable)
+                    }
+                }
+            }
+            true
+        }
     }
 
     private fun setupKeyboardToggle() {

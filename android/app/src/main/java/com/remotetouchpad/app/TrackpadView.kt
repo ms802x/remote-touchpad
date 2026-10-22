@@ -11,6 +11,8 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.min
 
 /**
  * Mirrors a laptop precision touchpad:
@@ -28,6 +30,13 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private val sensitivity = 1.6f
     private val moveSlop = 14f
     private val longPressMillis = 420L
+
+    // Velocity-based acceleration, like a real trackpad/mouse pointer curve:
+    // slow movement stays 1:1 precise, fast flicks travel proportionally
+    // further. accelCoefficient tunes how quickly the boost ramps up with
+    // per-event pixel speed; accelCap bounds how strong it can get.
+    private val accelCoefficient = 0.05f
+    private val accelCap = 2.5f
 
     // Single-finger state
     private var lastX = 0f
@@ -117,9 +126,13 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
                 if (twoFingerActive && event.pointerCount >= 2) {
                     updateTwoFingerGesture(event)
                 } else if (!twoFingerActive && !awaitingFullRelease) {
-                    val dx = (event.x - lastX) * sensitivity
-                    val dy = (event.y - lastY) * sensitivity
-                    totalMovement += abs(event.x - lastX) + abs(event.y - lastY)
+                    val rawDx = event.x - lastX
+                    val rawDy = event.y - lastY
+                    val speed = hypot(rawDx, rawDy)
+                    val accel = sensitivity * (1f + min(speed * accelCoefficient, accelCap))
+                    val dx = rawDx * accel
+                    val dy = rawDy * accel
+                    totalMovement += abs(rawDx) + abs(rawDy)
                     lastX = event.x
                     lastY = event.y
                     if (totalMovement >= moveSlop) {
