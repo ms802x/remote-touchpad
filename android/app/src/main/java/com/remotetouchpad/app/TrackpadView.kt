@@ -40,6 +40,13 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private var lastMidY = 0f
     private var twoFingerMaxDelta = 0f
 
+    // After a two-finger gesture ends (one finger lifts, one remains down),
+    // the remaining finger's position has no relation to lastX/lastY from
+    // the original single-finger touch-down - resuming move tracking there
+    // would read as a big sudden jump. Block single-finger input until every
+    // finger lifts and a fresh touch-down starts.
+    private var awaitingFullRelease = false
+
     private val handler = Handler(Looper.getMainLooper())
     private val longPressRunnable = Runnable {
         if (totalMovement < moveSlop) {
@@ -85,6 +92,7 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
             onRightClick?.invoke()
         }
         twoFingerActive = false
+        awaitingFullRelease = true
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -95,6 +103,7 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
                 totalMovement = 0f
                 longPressFired = false
                 twoFingerActive = false
+                awaitingFullRelease = false
                 handler.postDelayed(longPressRunnable, longPressMillis)
             }
 
@@ -107,7 +116,7 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
             MotionEvent.ACTION_MOVE -> {
                 if (twoFingerActive && event.pointerCount >= 2) {
                     updateTwoFingerGesture(event)
-                } else if (!twoFingerActive) {
+                } else if (!twoFingerActive && !awaitingFullRelease) {
                     val dx = (event.x - lastX) * sensitivity
                     val dy = (event.y - lastY) * sensitivity
                     totalMovement += abs(event.x - lastX) + abs(event.y - lastY)
@@ -130,9 +139,10 @@ class TrackpadView(context: Context, attrs: AttributeSet?) : View(context, attrs
                 handler.removeCallbacks(longPressRunnable)
                 if (twoFingerActive) {
                     endTwoFingerGesture()
-                } else if (!longPressFired && totalMovement < moveSlop) {
+                } else if (!awaitingFullRelease && !longPressFired && totalMovement < moveSlop) {
                     onLeftClick?.invoke()
                 }
+                awaitingFullRelease = false
             }
         }
         return true
