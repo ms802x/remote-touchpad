@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupMediaControls() {
         binding.mediaToggle.setOnClickListener {
+            if (keyboardVisible) closeKeyboard()
             mediaVisible = !mediaVisible
             binding.mediaBar.visibility = if (mediaVisible) View.VISIBLE else View.GONE
         }
@@ -170,22 +171,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupKeyboardToggle() {
         binding.keyboardToggle.setOnClickListener {
-            keyboardVisible = !keyboardVisible
-            val visibility = if (keyboardVisible) View.VISIBLE else View.GONE
-            binding.keyboardInput.visibility = visibility
-            binding.backspaceButton.visibility = visibility
-            binding.enterButton.visibility = visibility
-
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            if (mediaVisible) {
+                mediaVisible = false
+                binding.mediaBar.visibility = View.GONE
+            }
             if (keyboardVisible) {
-                binding.keyboardInput.requestFocus()
-                imm.showSoftInput(binding.keyboardInput, InputMethodManager.SHOW_IMPLICIT)
+                closeKeyboard()
             } else {
-                imm.hideSoftInputFromWindow(binding.keyboardInput.windowToken, 0)
-                binding.keyboardInput.setText("")
-                lastKeyboardText = ""
+                keyboardVisible = true
+                binding.keyboardBar.visibility = View.VISIBLE
+                binding.keyboardInput.requestFocus()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(binding.keyboardInput, InputMethodManager.SHOW_IMPLICIT)
             }
         }
+    }
+
+    private fun closeKeyboard() {
+        keyboardVisible = false
+        binding.keyboardBar.visibility = View.GONE
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.keyboardInput.windowToken, 0)
+        binding.keyboardInput.setText("")
+        lastKeyboardText = ""
     }
 
     private fun setupKeyboardInput() {

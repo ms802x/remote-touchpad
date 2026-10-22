@@ -118,7 +118,57 @@
             android:contentDescription="Next track" />
     </LinearLayout>
 
-    <!-- Bottom bar: keyboard/media toggles + inline keyboard input -->
+    <!-- Keyboard row: text input + backspace/enter, toggled by keyboardToggle.
+         Full width of its own, not squeezed into the icon row - plenty of
+         room for typing instead of a tiny sliver next to five icons. -->
+    <LinearLayout
+        android:id="@+id/keyboardBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_card"
+        android:padding="10dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="10dp"
+        android:visibility="gone">
+
+        <com.remotetouchpad.app.RemoteKeyboardEditText
+            android:id="@+id/keyboardInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Type to send…"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:background="@null"
+            android:paddingStart="8dp"
+            android:maxLines="1"
+            android:imeOptions="actionDone" />
+
+        <ImageButton
+            android:id="@+id/backspaceButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_backspace"
+            app:tint="@color/textPrimary"
+            android:contentDescription="Backspace" />
+
+        <ImageButton
+            android:id="@+id/enterButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button"
+            android:src="@drawable/ic_enter"
+            app:tint="@color/accent"
+            android:contentDescription="Enter" />
+    </LinearLayout>
+
+    <!-- Bottom bar: icon toggles/actions, always visible -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
@@ -179,42 +229,6 @@
             android:src="@drawable/ic_reverse_scroll"
             app:tint="@color/textPrimary"
             android:contentDescription="Toggle reverse scroll" />
-
-        <com.remotetouchpad.app.RemoteKeyboardEditText
-            android:id="@+id/keyboardInput"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:visibility="gone"
-            android:hint="Type to send…"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
-            android:background="@null"
-            android:maxLines="1"
-            android:imeOptions="actionDone" />
-
-        <ImageButton
-            android:id="@+id/backspaceButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="8dp"
-            android:visibility="gone"
-            android:background="@drawable/bg_button"
-            android:src="@drawable/ic_backspace"
-            app:tint="@color/textPrimary"
-            android:contentDescription="Backspace" />
-
-        <ImageButton
-            android:id="@+id/enterButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="8dp"
-            android:visibility="gone"
-            android:background="@drawable/bg_button"
-            android:src="@drawable/ic_enter"
-            app:tint="@color/accent"
-            android:contentDescription="Enter" />
     </LinearLayout>
 
 </LinearLayout>
