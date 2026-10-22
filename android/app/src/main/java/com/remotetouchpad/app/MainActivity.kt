@@ -58,26 +58,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupInsetPadding() {
         // Capture the base values from XML once; the insets listener can
-        // fire more than once (rotation, re-layout), and reading back the
-        // view's own current padding as the "base" each time would keep
-        // stacking the inset on top of itself.
+        // fire more than once (rotation, re-layout, keyboard open/close),
+        // and reading back the view's own current padding as the "base"
+        // each time would keep stacking the inset on top of itself.
         val baseTopPadding = binding.topBar.paddingTop
         val baseTopPaddingH = binding.topBar.paddingLeft
-        val baseBottomMargin = (binding.bottomBar.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        val baseBottomPadding = binding.root.paddingBottom
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+
             binding.topBar.setPadding(
                 baseTopPaddingH + bars.left,
                 baseTopPadding + bars.top,
                 baseTopPaddingH + bars.right,
                 binding.topBar.paddingBottom
             )
-            val params = binding.bottomBar.layoutParams as ViewGroup.MarginLayoutParams
-            params.bottomMargin = baseBottomMargin + bars.bottom
-            params.leftMargin = bars.left
-            params.rightMargin = bars.right
-            binding.bottomBar.layoutParams = params
+
+            // decorFitsSystemWindows(false) means we're responsible for the
+            // keyboard's inset too, not just the nav bar's - otherwise the
+            // soft keyboard just overlays on top of (covers) the bottom
+            // controls instead of pushing them up. Use whichever is taller:
+            // the keyboard when it's open, the nav bar the rest of the time.
+            val bottomInset = maxOf(bars.bottom, ime.bottom)
+            binding.root.setPadding(bars.left, binding.root.paddingTop, bars.right, baseBottomPadding + bottomInset)
             insets
         }
     }
